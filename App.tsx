@@ -1,117 +1,56 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import 'react-native-reanimated'
+import { StyleSheet, Text, View } from 'react-native';
+import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+import { useTensorflowModel } from 'react-native-fast-tflite';
+import FrameProcessing from './components/FrameProcessing';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+function App(): React.JSX.Element {
+  // const { status, requestPermission } = useCameraPermission();
+  const device = useCameraDevice('back');
+  // console.log(JSON.stringify(device, (k, v) => k === "formats" ? [] : v, 2))
+  const objectDetection = useTensorflowModel(require('./src/assets/my-modal.tflite'));
+  const model = objectDetection.state === 'loaded' ? objectDetection.model : undefined;
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  // require('@tensorflow/tfjs-backend-cpu');
+  // require('@tensorflow/tfjs-backend-webgl');
+  // const cocoSsd = require('@tensorflow-models/coco-ssd');
+  // const model1  = cocoSsd.load();
+
+
+  // Request camera permission if not already granted
+  // if (status === 'not-determined') {
+  //   requestPermission();
+  //   return (
+  //     <View style={styles.loadingContainer}>
+  //       <Text>Requesting Camera Permission...</Text>
+  //     </View>
+  //   );
+  // }
+
+  // Handle loading states
+  if ( !device || !model) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+    
+  }
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
+    <View style={{ flex: 1 }}>
+      <FrameProcessing device={device} model={model}  />
     </View>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
